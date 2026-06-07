@@ -74,7 +74,7 @@ export default function ReviewPanel({ data, onRemoveFromReview, onStartReview })
               <div className="mt-3 p-2.5 bg-slate-50 rounded-lg">
                 <p className="text-xs text-slate-500">
                   <span className="font-medium text-slate-700">الإجابة الصحيحة: </span>
-                  {q.options[q.correct]}
+                  <span style={{fontFamily : "'Segoe UI', system-ui"}} > {q.options[q.correct]} </span>
                 </p>
               </div>
             </div>

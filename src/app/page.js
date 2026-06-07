@@ -11,6 +11,7 @@ import BadgeToast from '../components/BadgeToast';
 import SplashScreen from '../components/SplashScreen';
 import QuizFeed from '../components/QuizFeed';
 import InfoPanel from '../components/InfoPanel';
+import FaqPanel from '../components/FaqPanel';
 import { BookOpen, X } from 'lucide-react';
 
 export default function Home() {
@@ -86,6 +87,7 @@ export default function Home() {
           {/* QUIZ MODE — vertical feed */}
           {activeMode === 'quiz' && quizQuestions.length > 0 && (
             <QuizFeed
+              key={examConfig?.startedAt}
               quizQuestions={quizQuestions}
               data={data}
               onAnswerById={answerById}
@@ -128,6 +130,7 @@ export default function Home() {
                 <WeakPanel data={data} onStartWeak={() => handleStartQuiz('weak')} />
               )}
               {activeTab === 'info' && <InfoPanel />}
+              {activeTab === 'faq' && <FaqPanel />}
             </>
           )}
         </main>

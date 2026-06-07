@@ -7,8 +7,6 @@
 /.next
 # testing
 /coverage
-package.json
-package-lock.json
 
 # production
 /build

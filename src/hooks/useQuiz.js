@@ -45,7 +45,7 @@ export function useQuiz() {
     }
     if (qs.length === 0) return false;
     setQuizQuestions(qs);
-    setExamConfig({ mode, ...config });
+    setExamConfig({ mode, ...config, startedAt: Date.now() });
     setActiveMode('quiz');
     return true;
   }, [data]);

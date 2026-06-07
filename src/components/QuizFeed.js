@@ -3,11 +3,10 @@ import { useState, useCallback, memo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Check, X, Bookmark, CheckCircle2, Lightbulb, Trophy,
-  ChevronDown, Target, ZoomIn, ImageOff,
+  ChevronLeft, Target, ZoomIn, ImageOff,
 } from 'lucide-react';
 
 const OPTION_LETTERS = ['أ', 'ب', 'ج', 'د'];
-const BATCH_SIZE = 10;
 
 function getOptionStyle(idx, answered, correct) {
   if (!answered) {
@@ -25,7 +24,7 @@ function getLetterStyle(idx, answered, correct) {
   return 'bg-slate-200 text-slate-400';
 }
 
-// ── Full-screen image lightbox ──────────────────────────────────────────────
+// ── Full-screen image lightbox ─────────────────────────────────────────────────
 function ImageLightbox({ src, alt, onClose }) {
   return (
     <AnimatePresence>
@@ -51,22 +50,17 @@ function ImageLightbox({ src, alt, onClose }) {
             <X className="w-4 h-4 text-slate-600" />
           </button>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={src}
-            alt={alt}
-            className="w-full rounded-2xl shadow-2xl object-contain max-h-[80vh]"
-          />
+          <img src={src} alt={alt} className="w-full rounded-2xl shadow-2xl object-contain max-h-[80vh]" />
         </motion.div>
       </motion.div>
     </AnimatePresence>
   );
 }
 
-// ── Question image with loading / error states ────────────────────────────────
+// ── Question image ─────────────────────────────────────────────────────────────
 function QuestionImage({ src, alt }) {
-  const [status, setStatus] = useState('loading'); // loading | loaded | error
+  const [status, setStatus] = useState('loading');
   const [lightbox, setLightbox] = useState(false);
-
   return (
     <>
       <div className="relative bg-slate-100 rounded-xl overflow-hidden mx-4 mb-1 border border-slate-200">
@@ -99,17 +93,20 @@ function QuestionImage({ src, alt }) {
           </button>
         )}
       </div>
-
       {lightbox && <ImageLightbox src={src} alt={alt} onClose={() => setLightbox(false)} />}
     </>
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-
+// ── Feed card ──────────────────────────────────────────────────────────────────
 const FeedCard = memo(function FeedCard({
-  question, questionNumber, animDelay, answered, isInReview, onAnswer, onAddToReview,
+  question, questionNumber, animDelay, answered, isInReview,
+  onAnswer, onAddToReview,
+  isLastVisible, hasMoreQuestions, onNext, onFinish,
 }) {
+  // Use 2-column grid when all options are short enough to fit side-by-side
+  const compact = question.options.every(opt => opt.length <= 35);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -117,68 +114,72 @@ const FeedCard = memo(function FeedCard({
       transition={{ duration: 0.32, delay: animDelay, ease: 'easeOut' }}
       className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden"
     >
-      {/* ── Question header ── */}
+      {/* Question header */}
       <div className="bg-gradient-to-br from-sky-500 to-blue-600 p-4">
-        <div className="flex items-start gap-3">
-          {/* Number badge */}
-          <div className="w-9 h-9 bg-white/20 rounded-xl border border-white/30 flex items-center justify-center text-white font-black text-sm shrink-0 mt-0.5">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-white/20 rounded-xl border border-white/30 flex items-center justify-center text-white font-black text-sm shrink-0">
             {questionNumber}
           </div>
           <div className="flex-1 min-w-0">
-            <span className="inline-block bg-white/20 border border-white/25 text-white text-xs px-2.5 py-1 rounded-full font-medium mb-2">
-              {question.category}
-            </span>
-            <p className="text-white font-semibold leading-relaxed text-sm sm:text-base text-left" dir="ltr"
-               style={{ fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif" }}>
+            <p
+              className="text-white font-semibold leading-relaxed text-sm sm:text-base text-left"
+              dir="ltr"
+              style={{ fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif" }}
+            >
               {question.text}
             </p>
           </div>
-          {/* Status dot */}
-          <div className={`w-2.5 h-2.5 rounded-full shrink-0 mt-1.5 ${
+          <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${
             !answered ? 'bg-white/30' :
             answered.isCorrect ? 'bg-emerald-300' : 'bg-rose-300'
           }`} />
         </div>
       </div>
 
-      {/* ── Question image (shown when question.image exists) ── */}
+      {/* Question image */}
       {question.image && (
         <div className="pt-4">
           <QuestionImage src={question.image} alt={`سؤال ${questionNumber}`} />
         </div>
       )}
 
-      {/* ── Options ── */}
-      <div className="p-4 space-y-2.5">
+      {/* Options — 2-column for short text, 1-column for long */}
+      <div className={`p-4 grid gap-2 ${compact ? 'grid-cols-2' : 'grid-cols-1'}`}>
         {question.options.map((option, idx) => (
           <button
             key={idx}
             onClick={() => !answered && onAnswer(idx)}
             disabled={!!answered}
-            className={`group w-full flex items-center gap-3 p-3.5 rounded-xl border-2 text-left transition-all duration-200 text-sm font-medium ${getOptionStyle(idx, answered, question.correct)}`}
+            className={`group w-full flex items-center gap-2.5 rounded-xl border-2 transition-all duration-200 text-sm font-medium ${compact ? 'p-3' : 'p-3.5'} ${getOptionStyle(idx, answered, question.correct)}`}
           >
-            <span className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 transition-all duration-200 ${getLetterStyle(idx, answered, question.correct)}`}>
+            <span className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 transition-all duration-200 ${getLetterStyle(idx, answered, question.correct)}`}>
               {OPTION_LETTERS[idx]}
             </span>
-            <span className="flex-1 leading-snug" dir="ltr"
-                  style={{ fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif" }}>{option}</span>
-            {answered && idx === question.correct && (
+            <span
+              className="flex-1 leading-snug text-left"
+              dir="ltr"
+              style={{ fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif" }}
+            >
+              {option}
+            </span>
+            {/* Show check/x icon only in single-column mode (space allows it) */}
+            {!compact && answered && idx === question.correct && (
               <Check className="w-4 h-4 text-emerald-500 shrink-0" strokeWidth={3} />
             )}
-            {answered && idx === answered.selected && !answered.isCorrect && idx !== question.correct && (
+            {!compact && answered && idx === answered.selected && !answered.isCorrect && idx !== question.correct && (
               <X className="w-4 h-4 text-rose-400 shrink-0" strokeWidth={3} />
             )}
           </button>
         ))}
       </div>
 
-      {/* ── Inline feedback ── */}
+      {/* Feedback */}
       {answered && (
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           transition={{ duration: 0.28 }}
-          className={`mx-4 mb-4 rounded-xl border overflow-hidden`}
+          className="mx-4 mb-4 rounded-xl border overflow-hidden"
         >
           <div className={`p-3.5 ${answered.isCorrect ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'}`}>
             <div className="flex items-start gap-2.5">
@@ -211,36 +212,48 @@ const FeedCard = memo(function FeedCard({
           </div>
         </motion.div>
       )}
+
+      {/* Next / Finish button — only on the last visible card after answering */}
+      {answered && isLastVisible && (
+        <div className="px-4 pb-4">
+          {hasMoreQuestions ? (
+            <button
+              onClick={onNext}
+              className="w-full flex items-center justify-center gap-2 bg-gradient-to-l from-sky-500 to-blue-600 text-white font-black py-3 rounded-xl shadow-md hover:shadow-lg active:scale-[0.98] transition-all text-sm"
+            >
+              <span>السؤال التالي</span>
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+          ) : (
+            <button
+              onClick={onFinish}
+              className="w-full flex items-center justify-center gap-2 bg-gradient-to-l from-emerald-500 to-teal-600 text-white font-black py-3 rounded-xl shadow-md hover:shadow-lg active:scale-[0.98] transition-all text-sm"
+            >
+              <span>عرض النتائج</span>
+              <Trophy className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      )}
     </motion.div>
   );
 });
 
+// ── Main feed ──────────────────────────────────────────────────────────────────
 export default function QuizFeed({ quizQuestions, data, onAnswerById, onAddToReview, onFinish }) {
-  // Pre-populate with existing answers from previous sessions
-  const [localAnswers, setLocalAnswers] = useState(() => {
-    const pre = {};
-    quizQuestions.forEach(q => {
-      const ans = data?.answers?.[q.id];
-      if (ans && (ans.status === 'correct' || ans.status === 'wrong')) {
-        pre[q.id] = {
-          selected: ans.chosenOption ?? -1,
-          isCorrect: ans.status === 'correct',
-        };
-      }
-    });
-    return pre;
-  });
-  const [visibleCount, setVisibleCount] = useState(Math.min(BATCH_SIZE, quizQuestions.length));
-  const firstNewRef = useRef(null);
+  // Always start fresh — no pre-population so weak/review questions are re-answerable
+  const [localAnswers, setLocalAnswers] = useState({});
+  const [visibleCount, setVisibleCount] = useState(1);
+  const nextCardRef = useRef(null);
 
   const visibleQuestions = quizQuestions.slice(0, visibleCount);
   const answeredCount = Object.keys(localAnswers).length;
   const correctCount = Object.values(localAnswers).filter(a => a.isCorrect).length;
-  const batchAnsweredCount = visibleQuestions.filter(q => localAnswers[q.id]).length;
-  const allBatchAnswered = batchAnsweredCount === visibleQuestions.length && visibleQuestions.length > 0;
-  const hasMore = visibleCount < quizQuestions.length;
-  const allDone = !hasMore && allBatchAnswered;
   const accuracy = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
+  const hasMore = visibleCount < quizQuestions.length;
+  const lastVisible = visibleQuestions[visibleQuestions.length - 1];
+  const lastAnswered = lastVisible ? !!localAnswers[lastVisible.id] : false;
+  const allDone = !hasMore && lastAnswered;
 
   const handleAnswer = useCallback((question, optionIndex) => {
     if (localAnswers[question.id]) return;
@@ -252,17 +265,17 @@ export default function QuizFeed({ quizQuestions, data, onAnswerById, onAddToRev
     onAnswerById(question.id, optionIndex);
   }, [localAnswers, onAnswerById]);
 
-  const loadMore = () => {
-    setVisibleCount(c => Math.min(c + BATCH_SIZE, quizQuestions.length));
+  const loadNext = useCallback(() => {
+    setVisibleCount(c => Math.min(c + 1, quizQuestions.length));
     setTimeout(() => {
-      firstNewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 120);
-  };
+      nextCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  }, [quizQuestions.length]);
 
   return (
     <div className="space-y-3">
-      {/* ── Sticky progress bar ── */}
-      <div className="bg-white/95 backdrop-blur border border-slate-200 rounded-2xl px-4 py-3 shadow-sm sticky top-[72px] z-30">
+      {/* Sticky progress bar */}
+      <div className="bg-white/95 backdrop-blur border border-slate-200 rounded-2xl px-4 py-3 shadow-sm sticky top-[110px] z-30">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1.5 text-xs">
             <span className="font-black text-slate-700">{answeredCount}</span>
@@ -287,59 +300,31 @@ export default function QuizFeed({ quizQuestions, data, onAnswerById, onAddToRev
             transition={{ duration: 0.6, ease: 'easeOut' }}
           />
         </div>
-        {/* Mini batch progress */}
-        <p className="text-xs text-slate-400 mt-1.5 text-center">
-          الدفعة الحالية: {batchAnsweredCount} / {visibleQuestions.length}
-        </p>
       </div>
 
-      {/* ── Question cards ── */}
+      {/* Question cards */}
       {visibleQuestions.map((q, idx) => {
-        // Attach the scroll-target ref to the first question of each new batch
-        const isFirstNew = idx === visibleCount - BATCH_SIZE && idx > 0;
+        const isLastVisible = idx === visibleQuestions.length - 1;
         return (
-          <div key={q.id} ref={isFirstNew ? firstNewRef : null}>
+          <div key={q.id} ref={isLastVisible && hasMore ? nextCardRef : null}>
             <FeedCard
               question={q}
               questionNumber={idx + 1}
-              animDelay={Math.min((idx % BATCH_SIZE) * 0.04, 0.36)}
+              animDelay={isLastVisible ? 0.05 : 0}
               answered={localAnswers[q.id] || null}
               isInReview={data?.reviewList?.includes(q.id)}
               onAnswer={(opt) => handleAnswer(q, opt)}
               onAddToReview={() => onAddToReview(q.id)}
+              isLastVisible={isLastVisible}
+              hasMoreQuestions={hasMore}
+              onNext={loadNext}
+              onFinish={onFinish}
             />
           </div>
         );
       })}
 
-      {/* ── Load More banner ── */}
-      {allBatchAnswered && hasMore && (
-        <motion.div
-          key={`load-${visibleCount}`}
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="bg-gradient-to-br from-sky-500 via-blue-500 to-indigo-600 rounded-2xl p-6 text-center shadow-xl"
-        >
-          <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-3 border border-white/30">
-            <ChevronDown className="w-8 h-8 text-white" />
-          </div>
-          <p className="text-white font-bold text-lg mb-1">
-            أحسنت! أجبت على {visibleCount} سؤال
-          </p>
-          <p className="text-white/70 text-sm mb-5">
-            {quizQuestions.length - visibleCount} سؤال لا تزال في الانتظار
-          </p>
-          <button
-            onClick={loadMore}
-            className="bg-white text-sky-600 font-black px-8 py-3 rounded-xl shadow-lg hover:bg-sky-50 active:scale-[0.97] text-sm"
-          >
-            الأسئلة التالية ({Math.min(BATCH_SIZE, quizQuestions.length - visibleCount)})
-          </button>
-        </motion.div>
-      )}
-
-      {/* ── All done → Results ── */}
+      {/* All done banner */}
       {allDone && (
         <motion.div
           key="finish"

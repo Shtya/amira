@@ -2,45 +2,50 @@
 import { useState } from 'react';
 import { ChevronDown, Info, Brain, Scissors, MapPin, Layers, Circle, AlertTriangle } from 'lucide-react';
 
-function Section({ title, subtitle, Icon, headerCls, bgCls, borderCls, defaultOpen = false, children }) {
+// ── Shared accordion section ──────────────────────────────────────────────────
+function Section({ title, subtitle, Icon, accentColor = 'bg-indigo-500', defaultOpen = false, children }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className={`rounded-2xl border ${borderCls} overflow-hidden shadow-sm`}>
+    <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
       <button
         onClick={() => setOpen(v => !v)}
-        className={`w-full flex items-center justify-between px-4 py-3.5 ${headerCls} text-white`}
+        className="w-full flex items-center justify-between px-4 py-3.5 bg-slate-700 hover:bg-slate-600 transition-colors text-white"
       >
-        <div className="flex items-center gap-2.5">
-          <Icon className="w-4 h-4 shrink-0" />
+        <div className="flex items-center gap-3">
+          <div className={`w-7 h-7 ${accentColor} rounded-lg flex items-center justify-center shrink-0`}>
+            <Icon className="w-3.5 h-3.5 text-white" />
+          </div>
           <div className="text-right">
             <p className="font-bold text-sm leading-tight">{title}</p>
-            {subtitle && <p className="text-xs opacity-75 mt-0.5">{subtitle}</p>}
+            {subtitle && <p className="text-xs text-slate-300 mt-0.5">{subtitle}</p>}
           </div>
         </div>
-        <ChevronDown className={`w-4 h-4 shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-4 h-4 shrink-0 text-slate-300 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
       </button>
-      {open && <div className={`px-4 py-4 ${bgCls}`}>{children}</div>}
+      {open && <div className="px-4 py-4 bg-white">{children}</div>}
     </div>
   );
 }
 
+// ── Row with numbered badge ────────────────────────────────────────────────────
 function Row({ num, term, desc }) {
   return (
-    <div className="flex gap-3 py-2.5 border-b border-white/60 last:border-0 items-start">
-      <span className="shrink-0 w-6 h-6 bg-white/80 rounded-full flex items-center justify-center text-xs font-black text-slate-700 shadow-sm mt-0.5">
+    <div className="flex gap-3 py-2.5 border-b border-slate-100 last:border-0 items-start">
+      <span className="shrink-0 w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-black text-indigo-700 mt-0.5">
         {num}
       </span>
       <div className="min-w-0">
         <p className="font-bold text-sm text-slate-800 leading-snug">{term}</p>
-        {desc && <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">{desc}</p>}
+        {desc && <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{desc}</p>}
       </div>
     </div>
   );
 }
 
+// ── Fractures ─────────────────────────────────────────────────────────────────
 function GroupHeader({ label }) {
   return (
-    <p className="text-xs font-black text-slate-500 uppercase tracking-wide mt-4 mb-1 first:mt-0 px-1">
+    <p className="text-xs font-black text-slate-400 uppercase tracking-wider mt-4 mb-1 first:mt-0 px-0.5 border-b border-slate-100 pb-1">
       {label}
     </p>
   );
@@ -48,20 +53,59 @@ function GroupHeader({ label }) {
 
 function FractureRow({ term, desc }) {
   return (
-    <div className="flex gap-2 py-2 border-b border-rose-100 last:border-0 items-start">
-      <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-rose-400 mt-1.5" />
+    <div className="flex gap-2 py-2 border-b border-slate-100 last:border-0 items-start">
+      <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-slate-400 mt-1.5" />
       <div>
-        <span className="font-bold text-sm text-rose-800">{term}</span>
-        {desc && <span className="text-xs text-slate-600"> — {desc}</span>}
+        <span className="font-bold text-sm text-slate-800">{term}</span>
+        {desc && <span className="text-xs text-slate-500"> — {desc}</span>}
       </div>
     </div>
   );
 }
 
+// ── Lateral view image ────────────────────────────────────────────────────────
+function LateralViewImage({ label = 'Lateral View — المنظر الجانبي للجمجمة' }) {
+  const [status, setStatus] = useState('loading');
+  return (
+    <div className="rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm">
+      <p className="text-xs text-center text-slate-600 font-semibold py-2 bg-slate-100 border-b border-slate-200">
+        {label}
+      </p>
+      <div className="relative">
+        {status !== 'error' && (
+          <img
+            src="/lateral%20view.png"
+            alt="Lateral View of Skull"
+            className={`w-full object-contain max-h-96 transition-opacity duration-300 ${status === 'loaded' ? 'opacity-100' : 'opacity-0'}`}
+            onLoad={() => setStatus('loaded')}
+            onError={() => setStatus('error')}
+          />
+        )}
+        {status === 'loading' && (
+          <div className="h-52 flex items-center justify-center">
+            <div className="w-7 h-7 border-2 border-slate-200 border-t-slate-600 rounded-full animate-spin" />
+          </div>
+        )}
+        {status === 'error' && (
+          <div className="h-32 flex flex-col items-center justify-center gap-2 text-slate-400 text-xs">
+            <Layers className="w-6 h-6 opacity-40" />
+            <span>ضع الصورة في:</span>
+            <code className="font-mono text-[11px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded">
+              public/lateral view.png
+            </code>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Main panel ────────────────────────────────────────────────────────────────
 export default function InfoPanel() {
   return (
     <div className="space-y-3 pb-8">
-      {/* Title card */}
+
+      {/* Hero card */}
       <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl p-4 text-white shadow-lg">
         <div className="flex items-center gap-2 mb-1">
           <Info className="w-5 h-5 shrink-0" />
@@ -70,16 +114,11 @@ export default function InfoPanel() {
         <p className="text-sm text-white/70">مرجع سريع للمعلومات التشريحية الأساسية</p>
       </div>
 
+      {/* Lateral view image — directly below hero */}
+      <LateralViewImage label="Lateral View of the Skull — المنظر الجانبي للجمجمة" />
+
       {/* ── 1. Surgical Sutures ── */}
-      <Section
-        title="الغرز الجراحية"
-        subtitle="Surgical Sutures"
-        Icon={Scissors}
-        headerCls="bg-sky-600"
-        bgCls="bg-sky-50"
-        borderCls="border-sky-200"
-        defaultOpen
-      >
+      <Section title="الغرز الجراحية" subtitle="Surgical Sutures" Icon={Scissors} accentColor="bg-sky-500" defaultOpen>
         <Row num={1} term="Coronal Suture" desc="Divided Between Frontal And Parietal Bones" />
         <Row num={2} term="Sagittal Suture" desc="Divided Between The Parietal Bone Right & Left" />
         <Row num={3} term="Lambdoid Suture" desc="Divided Between The Occipital And Parietal Sutures" />
@@ -87,14 +126,7 @@ export default function InfoPanel() {
       </Section>
 
       {/* ── 2. Points Between Sutures ── */}
-      <Section
-        title="النقاط بين الغرز"
-        subtitle="Points Between Sutures"
-        Icon={MapPin}
-        headerCls="bg-violet-600"
-        bgCls="bg-violet-50"
-        borderCls="border-violet-200"
-      >
+      <Section title="النقاط بين الغرز" subtitle="Points Between Sutures" Icon={MapPin} accentColor="bg-violet-500">
         <Row num={1} term="Bregma (Anterior)" desc="Junction Between The Coronal And Sagittal Sutures" />
         <Row num={2} term="Lambda (Posterosuperior)" desc="Junction Between The Lambdoid Suture And The Sagittal Suture" />
         <Row num={3} term="Pterion (Frontal-Sphenoidal)" desc="Junction Between Coronal Suture And Temporal (Squamosal) Suture" />
@@ -102,14 +134,7 @@ export default function InfoPanel() {
       </Section>
 
       {/* ── 3. Cranial Bones ── */}
-      <Section
-        title="مفصلات عظام الجمجمة"
-        subtitle="Cranial Bone Articulations"
-        Icon={Brain}
-        headerCls="bg-emerald-600"
-        bgCls="bg-emerald-50"
-        borderCls="border-emerald-200"
-      >
+      <Section title="مفصلات عظام الجمجمة" subtitle="Cranial Bone Articulations" Icon={Brain} accentColor="bg-emerald-500">
         <Row num={1} term="Frontal" desc="Four Cranial Bones (Right & Left Parietals, Sphenoid, Ethmoid) + Eight Facial Bones" />
         <Row num={2} term="Parietal" desc="Five Cranial Bones (Frontal, Occipital, Temporal, Sphenoid, Opposite Parietal)" />
         <Row num={3} term="Occipital" desc="Six Bones: Two Parietals + Two Temporals + Sphenoid + Atlas (First Cervical Vertebra)" />
@@ -118,15 +143,8 @@ export default function InfoPanel() {
         <Row num={6} term="Ethmoid" desc="Two Cranial Bones (Frontal And Sphenoid) + Eleven Facial Bones" />
       </Section>
 
-      {/* ── 4. Facial Bones + lateral view image ── */}
-      <Section
-        title="مفصلات عظام الوجه"
-        subtitle="Facial Bone Articulations"
-        Icon={Layers}
-        headerCls="bg-teal-600"
-        bgCls="bg-teal-50"
-        borderCls="border-teal-200"
-      >
+      {/* ── 4. Facial Bones ── */}
+      <Section title="مفصلات عظام الوجه" subtitle="Facial Bone Articulations" Icon={Layers} accentColor="bg-teal-500">
         <Row num={1} term="Maxillae" desc="Two Cranial Bones (Frontal & Ethmoid) + Seven Facial Bones" />
         <Row num={2} term="Zygomatic" desc="Three Cranial Bones (Frontal, Sphenoid, Temporal) + One Facial Bone (Maxilla)" />
         <Row num={3} term="Lacrimal" desc="Two Cranial Bones (Frontal & Ethmoid) + Two Facial Bones (Maxilla & Inferior Nasal Concha)" />
@@ -134,41 +152,24 @@ export default function InfoPanel() {
         <Row num={5} term="Inferior Nasal Conchae" desc="One Cranial Bone (Ethmoid) + Three Facial Bones (Maxilla, Lacrimal, Palatine)" />
         <Row num={6} term="Palatine" desc="Two Cranial Bones (Sphenoid & Ethmoid) + Four Facial Bones" />
         <Row num={7} term="Vomer" desc="Two Cranial Bones (Sphenoid & Ethmoid) + Four Facial Bones + Septal Cartilage" />
-
-        {/* Lateral view image — place the file at public/lateral view.png */}
-        <LateralViewImage />
       </Section>
 
       {/* ── 5. Circle of Willis ── */}
-      <Section
-        title="دائرة ويليس"
-        subtitle="Circle of Willis"
-        Icon={Circle}
-        headerCls="bg-amber-600"
-        bgCls="bg-amber-50"
-        borderCls="border-amber-200"
-      >
-        <div className="space-y-1">
-          <div className="flex gap-3 py-2.5 border-b border-amber-200 items-center">
-            <span className="shrink-0 text-xs font-black text-amber-700 w-14">Start</span>
+      <Section title="دائرة ويليس" subtitle="Circle of Willis" Icon={Circle} accentColor="bg-amber-500">
+        <div className="divide-y divide-slate-100">
+          <div className="flex gap-3 py-2.5 items-center">
+            <span className="shrink-0 text-xs font-black text-indigo-600 w-12">Start</span>
             <p className="text-sm text-slate-700">Posterior Inferior Cerebral Artery</p>
           </div>
           <div className="flex gap-3 py-2.5 items-center">
-            <span className="shrink-0 text-xs font-black text-amber-700 w-14">End</span>
+            <span className="shrink-0 text-xs font-black text-indigo-600 w-12">End</span>
             <p className="text-sm text-slate-700">Anterior Superior Cerebral Artery</p>
           </div>
         </div>
       </Section>
 
       {/* ── 6. All Types of Fractures ── */}
-      <Section
-        title="أنواع الكسور"
-        subtitle="All Types of Fractures"
-        Icon={AlertTriangle}
-        headerCls="bg-rose-600"
-        bgCls="bg-rose-50"
-        borderCls="border-rose-200"
-      >
+      <Section title="أنواع الكسور" subtitle="All Types of Fractures" Icon={AlertTriangle} accentColor="bg-rose-500">
         <GroupHeader label="General" />
         <FractureRow term="Monteggia" desc="Fracture Ulna & Displacement Head Radius" />
         <FractureRow term="Depressed / Ping-Pong" desc="In Skull" />
@@ -214,42 +215,7 @@ export default function InfoPanel() {
         <FractureRow term="Compression" desc="Vertebral Body Compression" />
         <FractureRow term="Holdsworth" desc="Thoracolumbar Junction Fracture" />
       </Section>
-    </div>
-  );
-}
 
-function LateralViewImage() {
-  const [status, setStatus] = useState('loading');
-
-  return (
-    <div className="mt-4 rounded-xl overflow-hidden border border-teal-200 bg-white shadow-sm">
-      <p className="text-xs text-center text-teal-700 font-semibold py-1.5 bg-teal-100 border-b border-teal-200">
-        Lateral View — المنظر الجانبي للجمجمة
-      </p>
-
-      {status === 'error' ? (
-        <div className="flex flex-col items-center justify-center py-10 text-slate-400 text-xs gap-1">
-          <Layers className="w-6 h-6 opacity-40" />
-          <span>ضع صورة الجمجمة في:</span>
-          <code className="text-slate-500 font-mono text-[11px] bg-slate-100 px-2 py-0.5 rounded">
-            public/lateral view.png
-          </code>
-        </div>
-      ) : (
-        <img
-          src="/lateral%20view.png"
-          alt="Lateral View of Skull"
-          className={`w-full object-contain max-h-80 transition-opacity duration-300 ${status === 'loaded' ? 'opacity-100' : 'opacity-0'}`}
-          onLoad={() => setStatus('loaded')}
-          onError={() => setStatus('error')}
-        />
-      )}
-
-      {status === 'loading' && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-6 h-6 border-2 border-teal-300 border-t-teal-600 rounded-full animate-spin" />
-        </div>
-      )}
     </div>
   );
 }

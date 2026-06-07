@@ -49,26 +49,17 @@ export default function WeakPanel({ data, onStartWeak }) {
               intensity === 'medium' ? 'border-amber-200' : 'border-slate-200'
             }`}>
               <div className="flex items-start gap-3">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-black shrink-0 mt-0.5 ${
+                <div  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-black shrink-0 mt-0.5 ${
                   intensity === 'high' ? 'bg-rose-100 text-rose-600' :
                   intensity === 'medium' ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-600'
                 }`}>
                   {attempts}
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-medium">{q.category}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                      intensity === 'high' ? 'bg-rose-100 text-rose-600' :
-                      intensity === 'medium' ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-500'
-                    }`}>
-                      {attempts} {attempts === 1 ? 'خطأ' : 'أخطاء'}
-                    </span>
-                  </div>
-                  <p className="text-slate-700 text-sm font-medium leading-relaxed">{q.text}</p>
-                  <p className="text-xs text-slate-400 mt-2">
-                    <span className="font-medium">الإجابة الصحيحة: </span>
-                    <span className="text-emerald-600 font-medium">{q.options[q.correct]}</span>
+                <div dir='ltr' className="flex-1">
+                   
+                  <p style={{fontFamily : "'Segoe UI', system-ui"}} className="text-slate-700 text-sm font-medium leading-relaxed">{q.text}</p>
+                  <p className="text-xs text-slate-400 mt-2"> 
+                    <span className="text-emerald-600 font-medium" style={{fontFamily : "'Segoe UI', system-ui"}} > {q.options[q.correct]} </span>
                   </p>
                 </div>
               </div>

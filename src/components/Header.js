@@ -1,5 +1,5 @@
 'use client';
-import { BookOpen, Flame, Target, HelpCircle, FlaskConical, Bookmark, BarChart3, AlertTriangle, Info } from 'lucide-react';
+import { BookOpen, Flame, Target, HelpCircle, FlaskConical, Bookmark, BarChart3, AlertTriangle, Info, MessageCircleQuestion } from 'lucide-react';
 import { getAccuracy, getLevel } from '../utils/storage';
 
 const TAB_ICONS = {
@@ -9,6 +9,7 @@ const TAB_ICONS = {
   stats: BarChart3,
   weak: AlertTriangle,
   info: Info,
+  faq: MessageCircleQuestion,
 };
 
 export default function Header({ data, onTabChange, activeTab }) {
@@ -23,6 +24,7 @@ export default function Header({ data, onTabChange, activeTab }) {
     { id: 'stats', label: 'إحصائياتي' },
     { id: 'weak', label: 'نقاط الضعف' },
     { id: 'info', label: 'المراجع' },
+    { id: 'faq', label: 'البرومترك' },
   ];
 
   return (
