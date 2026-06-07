@@ -82,7 +82,7 @@ export default function SplashScreen() {
           className="flex items-center justify-center gap-2.5 text-white/90 text-lg font-semibold"
         >
           <Sparkles className="w-5 h-5 shrink-0" />
-          <span>أهلاً وسهلاً بكِ      </span>
+          <span>    يسعد يومك يا قمر 🤍      </span>
           <Sparkles className="w-5 h-5 shrink-0" />
         </motion.div>
  
