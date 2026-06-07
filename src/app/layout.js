@@ -1,8 +1,8 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'منصة الاختبارات الذكية',
-  description: 'نظام تعلم عربي تفاعلي ذكي',
+  title: '',
+  description: '',
 };
 
 export default function RootLayout({ children }) {
