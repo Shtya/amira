@@ -9,14 +9,16 @@ export default function ExamPanel({ data, onStart }) {
 
   const [showRangeConfig, setShowRangeConfig] = useState(false);
   const [rangeFrom, setRangeFrom] = useState(1);
-  const [rangeTo, setRangeTo] = useState(Math.min(50, questions.length));
+
+  const PAGE_SIZE = 20;
 
   const handleRangeStart = () => {
     const from = Math.max(1, Math.min(rangeFrom, questions.length));
-    const to = Math.max(from, Math.min(rangeTo, questions.length));
-    onStart('range', { from, to });
+    onStart('range', { from });
     setShowRangeConfig(false);
   };
+
+  const availableFromHere = Math.min(PAGE_SIZE, Math.max(0, questions.length - rangeFrom + 1));
 
   const examModes = [
     {
@@ -90,40 +92,43 @@ export default function ExamPanel({ data, onStart }) {
         ))}
       </div>
 
-      {/* Range config panel — shown when range card is selected */}
+      {/* Range config panel — single "from" input, auto-picks 20 questions */}
       {showRangeConfig && (
         <div className="bg-violet-50 border-2 border-violet-300 rounded-2xl p-5 shadow-sm animate-fade-in">
-          <h3 className="font-bold text-violet-800 text-sm mb-4">اختر نطاق الأسئلة</h3>
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="text-xs font-medium text-violet-700 block mb-1.5">من سؤال</label>
+          <h3 className="font-bold text-violet-800 text-sm mb-1">ابدأ من أي سؤال؟</h3>
+          <p className="text-xs text-violet-500 mb-4">سيتم عرض {PAGE_SIZE} سؤال ابتداءً من الرقم الذي تختاره</p>
+
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex-1">
+              <label className="text-xs font-medium text-violet-700 block mb-1.5">ابدأ من السؤال رقم</label>
               <input
                 type="number"
                 min={1}
                 max={questions.length}
                 value={rangeFrom}
                 onChange={e => setRangeFrom(Number(e.target.value))}
-                className="w-full border-2 border-violet-200 rounded-xl px-3 py-2.5 text-slate-800 text-sm font-bold focus:outline-none focus:border-violet-400 bg-white"
+                className="w-full border-2 border-violet-200 rounded-xl px-3 py-2.5 text-slate-800 text-sm font-bold focus:outline-none focus:border-violet-400 bg-white text-center"
               />
             </div>
-            <div>
-              <label className="text-xs font-medium text-violet-700 block mb-1.5">إلى سؤال</label>
-              <input
-                type="number"
-                min={rangeFrom}
-                max={questions.length}
-                value={rangeTo}
-                onChange={e => setRangeTo(Number(e.target.value))}
-                className="w-full border-2 border-violet-200 rounded-xl px-3 py-2.5 text-slate-800 text-sm font-bold focus:outline-none focus:border-violet-400 bg-white"
-              />
+            <div className="text-center pt-5">
+              <div className="bg-violet-100 border border-violet-200 rounded-xl px-3 py-2.5">
+                <p className="text-xs text-violet-500 leading-none">حتى</p>
+                <p className="font-black text-violet-700 text-sm leading-none mt-0.5">
+                  {Math.min(rangeFrom + PAGE_SIZE - 1, questions.length)}
+                </p>
+              </div>
             </div>
           </div>
-          <p className="text-xs text-violet-600 mb-4 font-medium">
-            عدد الأسئلة: {Math.max(0, Math.min(rangeTo, questions.length) - Math.max(1, rangeFrom) + 1)} سؤال
-          </p>
+
+          <div className="flex items-center justify-between bg-violet-100 rounded-xl px-3 py-2 mb-4">
+            <span className="text-xs text-violet-600 font-medium">عدد الأسئلة المتاحة</span>
+            <span className="font-black text-violet-700 text-sm">{availableFromHere} سؤال</span>
+          </div>
+
           <button
             onClick={handleRangeStart}
-            className="w-full bg-gradient-to-r from-violet-500 to-purple-600 text-white py-2.5 rounded-xl font-bold text-sm shadow hover:shadow-md active:scale-[0.98]"
+            disabled={availableFromHere === 0}
+            className="w-full bg-gradient-to-r from-violet-500 to-purple-600 text-white py-2.5 rounded-xl font-bold text-sm shadow hover:shadow-md active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             ابدأ الاختبار
           </button>

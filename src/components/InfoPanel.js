@@ -30,7 +30,7 @@ function Section({ title, subtitle, Icon, accentColor = 'bg-indigo-500', default
 // ── Row with numbered badge ────────────────────────────────────────────────────
 function Row({ num, term, desc }) {
   return (
-    <div className="flex gap-3 py-2.5 border-b border-slate-100 last:border-0 items-start">
+    <div dir="ltr" style={{fontFamily : "'Segoe UI', system-ui"}} className="flex gap-3 py-2.5 border-b border-slate-100 last:border-0 items-start">
       <span className="shrink-0 w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-xs font-black text-indigo-700 mt-0.5">
         {num}
       </span>
@@ -53,7 +53,7 @@ function GroupHeader({ label }) {
 
 function FractureRow({ term, desc }) {
   return (
-    <div className="flex gap-2 py-2 border-b border-slate-100 last:border-0 items-start">
+    <div dir="ltr" style={{fontFamily : "'Segoe UI', system-ui"}} className="flex gap-2 py-2 border-b border-slate-100 last:border-0 items-start">
       <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-slate-400 mt-1.5" />
       <div>
         <span className="font-bold text-sm text-slate-800">{term}</span>
@@ -68,9 +68,7 @@ function LateralViewImage({ label = 'Lateral View — المنظر الجانب�
   const [status, setStatus] = useState('loading');
   return (
     <div className="rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm">
-      <p className="text-xs text-center text-slate-600 font-semibold py-2 bg-slate-100 border-b border-slate-200">
-        {label}
-      </p>
+      
       <div className="relative">
         {status !== 'error' && (
           <img
@@ -156,7 +154,7 @@ export default function InfoPanel() {
 
       {/* ── 5. Circle of Willis ── */}
       <Section title="دائرة ويليس" subtitle="Circle of Willis" Icon={Circle} accentColor="bg-amber-500">
-        <div className="divide-y divide-slate-100">
+        <div dir="ltr" style={{fontFamily : "'Segoe UI', system-ui"}} className="divide-y divide-slate-100">
           <div className="flex gap-3 py-2.5 items-center">
             <span className="shrink-0 text-xs font-black text-indigo-600 w-12">Start</span>
             <p className="text-sm text-slate-700">Posterior Inferior Cerebral Artery</p>

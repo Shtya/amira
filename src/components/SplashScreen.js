@@ -32,13 +32,9 @@ export default function SplashScreen() {
     localStorage.setItem(SPLASH_KEY, '1');
     _isVisible = true;
     setVisible(true);
-
-    // Start fade 0.6 s before removal so the transition completes in time
-    setTimeout(() => { _isFading = true; setFading(true); }, 6400);
-    setTimeout(() => { _isVisible = false; setVisible(false); }, 7000);
-
-    // Intentionally NO cleanup return — React StrictMode would cancel the
-    // timers on its simulated unmount, causing the splash to never close.
+ 
+    setTimeout(() => { _isFading = true; setFading(true); }, 2400);
+    setTimeout(() => { _isVisible = false; setVisible(false); }, 4000); 
   }, []);
 
   if (!visible) return null;
@@ -86,18 +82,10 @@ export default function SplashScreen() {
           className="flex items-center justify-center gap-2.5 text-white/90 text-lg font-semibold"
         >
           <Sparkles className="w-5 h-5 shrink-0" />
-          <span>أهلاً وسهلاً بكِ في منصة الاختبارات</span>
+          <span>أهلاً وسهلاً بكِ      </span>
           <Sparkles className="w-5 h-5 shrink-0" />
         </motion.div>
-
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.1, duration: 0.5 }}
-          className="text-white/65 text-sm mt-3 font-medium"
-        >
-          تعلمي ذكي، نتائج أفضل
-        </motion.p>
+ 
       </motion.div>
 
       {/* Progress bar */}
@@ -106,7 +94,7 @@ export default function SplashScreen() {
           className="h-full bg-white rounded-full"
           initial={{ width: '0%' }}
           animate={{ width: '100%' }}
-          transition={{ duration: 7, ease: 'linear' }}
+          transition={{ duration: 3, ease: 'linear' }}
         />
       </div>
     </motion.div>

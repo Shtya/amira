@@ -3,10 +3,11 @@ import { useState, useCallback, memo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Check, X, Bookmark, CheckCircle2, Lightbulb, Trophy,
-  ChevronLeft, Target, ZoomIn, ImageOff,
+  ChevronLeft, ChevronRight, Target, ZoomIn, ImageOff,
 } from 'lucide-react';
 
 const OPTION_LETTERS = ['أ', 'ب', 'ج', 'د'];
+const PAGE_SIZE = 20;
 
 function getOptionStyle(idx, answered, correct) {
   if (!answered) {
@@ -30,23 +31,17 @@ function ImageLightbox({ src, alt, onClose }) {
     <AnimatePresence>
       <motion.div
         className="fixed inset-0 z-[998] flex items-center justify-center bg-black/80 p-4"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         onClick={onClose}
       >
         <motion.div
           className="relative max-w-3xl w-full"
-          initial={{ scale: 0.85, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
+          initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.85, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 260, damping: 22 }}
           onClick={e => e.stopPropagation()}
         >
-          <button
-            onClick={onClose}
-            className="absolute -top-3 -left-3 z-10 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-rose-50"
-          >
+          <button onClick={onClose} className="absolute -top-3 -left-3 z-10 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-rose-50">
             <X className="w-4 h-4 text-slate-600" />
           </button>
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -77,17 +72,12 @@ function QuestionImage({ src, alt }) {
         )}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={src}
-          alt={alt}
-          onLoad={() => setStatus('loaded')}
-          onError={() => setStatus('error')}
+          src={src} alt={alt}
+          onLoad={() => setStatus('loaded')} onError={() => setStatus('error')}
           className={`w-full object-contain max-h-72 rounded-xl transition-opacity duration-300 ${status === 'loaded' ? 'opacity-100' : 'opacity-0 absolute inset-0'}`}
         />
         {status === 'loaded' && (
-          <button
-            onClick={() => setLightbox(true)}
-            className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 hover:bg-black/70 transition-colors"
-          >
+          <button onClick={() => setLightbox(true)} className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 hover:bg-black/70 transition-colors">
             <ZoomIn className="w-3.5 h-3.5" />
             تكبير
           </button>
@@ -100,18 +90,15 @@ function QuestionImage({ src, alt }) {
 
 // ── Feed card ──────────────────────────────────────────────────────────────────
 const FeedCard = memo(function FeedCard({
-  question, questionNumber, animDelay, answered, isInReview,
-  onAnswer, onAddToReview,
-  isLastVisible, hasMoreQuestions, onNext, onFinish,
+  question, questionNumber, animDelay, answered, isInReview, onAnswer, onAddToReview,
 }) {
-  // Use 2-column grid when all options are short enough to fit side-by-side
   const compact = question.options.every(opt => opt.length <= 35);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.32, delay: animDelay, ease: 'easeOut' }}
+      transition={{ duration: 0.28, delay: animDelay, ease: 'easeOut' }}
       className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden"
     >
       {/* Question header */}
@@ -129,10 +116,7 @@ const FeedCard = memo(function FeedCard({
               {question.text}
             </p>
           </div>
-          <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${
-            !answered ? 'bg-white/30' :
-            answered.isCorrect ? 'bg-emerald-300' : 'bg-rose-300'
-          }`} />
+          <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${!answered ? 'bg-white/30' : answered.isCorrect ? 'bg-emerald-300' : 'bg-rose-300'}`} />
         </div>
       </div>
 
@@ -143,7 +127,7 @@ const FeedCard = memo(function FeedCard({
         </div>
       )}
 
-      {/* Options — 2-column for short text, 1-column for long */}
+      {/* Options */}
       <div className={`p-4 grid gap-2 ${compact ? 'grid-cols-2' : 'grid-cols-1'}`}>
         {question.options.map((option, idx) => (
           <button
@@ -155,20 +139,11 @@ const FeedCard = memo(function FeedCard({
             <span className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 transition-all duration-200 ${getLetterStyle(idx, answered, question.correct)}`}>
               {OPTION_LETTERS[idx]}
             </span>
-            <span
-              className="flex-1 leading-snug text-left"
-              dir="ltr"
-              style={{ fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif" }}
-            >
+            <span className="flex-1 leading-snug text-left" dir="ltr" style={{ fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif" }}>
               {option}
             </span>
-            {/* Show check/x icon only in single-column mode (space allows it) */}
-            {!compact && answered && idx === question.correct && (
-              <Check className="w-4 h-4 text-emerald-500 shrink-0" strokeWidth={3} />
-            )}
-            {!compact && answered && idx === answered.selected && !answered.isCorrect && idx !== question.correct && (
-              <X className="w-4 h-4 text-rose-400 shrink-0" strokeWidth={3} />
-            )}
+            {!compact && answered && idx === question.correct && <Check className="w-4 h-4 text-emerald-500 shrink-0" strokeWidth={3} />}
+            {!compact && answered && idx === answered.selected && !answered.isCorrect && idx !== question.correct && <X className="w-4 h-4 text-rose-400 shrink-0" strokeWidth={3} />}
           </button>
         ))}
       </div>
@@ -178,7 +153,7 @@ const FeedCard = memo(function FeedCard({
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
-          transition={{ duration: 0.28 }}
+          transition={{ duration: 0.25 }}
           className="mx-4 mb-4 rounded-xl border overflow-hidden"
         >
           <div className={`p-3.5 ${answered.isCorrect ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'}`}>
@@ -191,17 +166,11 @@ const FeedCard = memo(function FeedCard({
                 <p className={`font-bold text-sm mb-1 ${answered.isCorrect ? 'text-emerald-700' : 'text-rose-700'}`}>
                   {answered.isCorrect ? 'إجابة صحيحة! أحسنت!' : 'إجابة خاطئة'}
                 </p>
-                {question.explanation && (
-                  <p className="text-slate-600 text-xs leading-relaxed">{question.explanation}</p>
-                )}
+                {question.explanation && <p className="text-slate-600 text-xs leading-relaxed">{question.explanation}</p>}
                 {!answered.isCorrect && (
                   <button
                     onClick={onAddToReview}
-                    className={`mt-2.5 flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg border-2 transition-all active:scale-95 ${
-                      isInReview
-                        ? 'bg-amber-100 text-amber-700 border-amber-300'
-                        : 'bg-white text-amber-600 border-amber-300 hover:bg-amber-50'
-                    }`}
+                    className={`mt-2.5 flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg border-2 transition-all active:scale-95 ${isInReview ? 'bg-amber-100 text-amber-700 border-amber-300' : 'bg-white text-amber-600 border-amber-300 hover:bg-amber-50'}`}
                   >
                     <Bookmark className="w-3.5 h-3.5" />
                     {isInReview ? 'في قائمة المراجعة' : 'أضف للمراجعة'}
@@ -212,74 +181,49 @@ const FeedCard = memo(function FeedCard({
           </div>
         </motion.div>
       )}
-
-      {/* Next / Finish button — only on the last visible card after answering */}
-      {answered && isLastVisible && (
-        <div className="px-4 pb-4">
-          {hasMoreQuestions ? (
-            <button
-              onClick={onNext}
-              className="w-full flex items-center justify-center gap-2 bg-gradient-to-l from-sky-500 to-blue-600 text-white font-black py-3 rounded-xl shadow-md hover:shadow-lg active:scale-[0.98] transition-all text-sm"
-            >
-              <span>السؤال التالي</span>
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-          ) : (
-            <button
-              onClick={onFinish}
-              className="w-full flex items-center justify-center gap-2 bg-gradient-to-l from-emerald-500 to-teal-600 text-white font-black py-3 rounded-xl shadow-md hover:shadow-lg active:scale-[0.98] transition-all text-sm"
-            >
-              <span>عرض النتائج</span>
-              <Trophy className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-      )}
     </motion.div>
   );
 });
 
 // ── Main feed ──────────────────────────────────────────────────────────────────
 export default function QuizFeed({ quizQuestions, data, onAnswerById, onAddToReview, onFinish }) {
-  // Always start fresh — no pre-population so weak/review questions are re-answerable
   const [localAnswers, setLocalAnswers] = useState({});
-  const [visibleCount, setVisibleCount] = useState(1);
-  const nextCardRef = useRef(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const topRef = useRef(null);
 
-  const visibleQuestions = quizQuestions.slice(0, visibleCount);
+  const totalPages = Math.ceil(quizQuestions.length / PAGE_SIZE);
+  const pageQuestions = quizQuestions.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
+
   const answeredCount = Object.keys(localAnswers).length;
   const correctCount = Object.values(localAnswers).filter(a => a.isCorrect).length;
   const accuracy = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
-  const hasMore = visibleCount < quizQuestions.length;
-  const lastVisible = visibleQuestions[visibleQuestions.length - 1];
-  const lastAnswered = lastVisible ? !!localAnswers[lastVisible.id] : false;
-  const allDone = !hasMore && lastAnswered;
+  const allAnswered = answeredCount === quizQuestions.length;
 
   const handleAnswer = useCallback((question, optionIndex) => {
     if (localAnswers[question.id]) return;
     const isCorrect = optionIndex === question.correct;
-    setLocalAnswers(prev => ({
-      ...prev,
-      [question.id]: { selected: optionIndex, isCorrect },
-    }));
+    setLocalAnswers(prev => ({ ...prev, [question.id]: { selected: optionIndex, isCorrect } }));
     onAnswerById(question.id, optionIndex);
   }, [localAnswers, onAnswerById]);
 
-  const loadNext = useCallback(() => {
-    setVisibleCount(c => Math.min(c + 1, quizQuestions.length));
-    setTimeout(() => {
-      nextCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
-  }, [quizQuestions.length]);
+  const goToPage = useCallback((page) => {
+    setCurrentPage(page);
+    setTimeout(() => topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+  }, []);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" ref={topRef}>
       {/* Sticky progress bar */}
       <div className="bg-white/95 backdrop-blur border border-slate-200 rounded-2xl px-4 py-3 shadow-sm sticky top-[110px] z-30">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1.5 text-xs">
             <span className="font-black text-slate-700">{answeredCount}</span>
             <span className="text-slate-400">/ {quizQuestions.length} سؤال</span>
+            {totalPages > 1 && (
+              <span className="mr-2 bg-slate-100 text-slate-500 text-xs font-bold px-2 py-0.5 rounded-full">
+                صفحة {currentPage + 1}/{totalPages}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-3 text-xs font-bold">
             <span className="flex items-center gap-1 text-emerald-600">
@@ -302,33 +246,79 @@ export default function QuizFeed({ quizQuestions, data, onAnswerById, onAddToRev
         </div>
       </div>
 
-      {/* Question cards */}
-      {visibleQuestions.map((q, idx) => {
-        const isLastVisible = idx === visibleQuestions.length - 1;
+      {/* Question cards for this page */}
+      {pageQuestions.map((q, idx) => {
+        const globalIdx = currentPage * PAGE_SIZE + idx;
         return (
-          <div key={q.id} ref={isLastVisible && hasMore ? nextCardRef : null}>
-            <FeedCard
-              question={q}
-              questionNumber={idx + 1}
-              animDelay={isLastVisible ? 0.05 : 0}
-              answered={localAnswers[q.id] || null}
-              isInReview={data?.reviewList?.includes(q.id)}
-              onAnswer={(opt) => handleAnswer(q, opt)}
-              onAddToReview={() => onAddToReview(q.id)}
-              isLastVisible={isLastVisible}
-              hasMoreQuestions={hasMore}
-              onNext={loadNext}
-              onFinish={onFinish}
-            />
-          </div>
+          <FeedCard
+            key={q.id}
+            question={q}
+            questionNumber={globalIdx + 1}
+            animDelay={Math.min(idx * 0.03, 0.3)}
+            answered={localAnswers[q.id] || null}
+            isInReview={data?.reviewList?.includes(q.id)}
+            onAnswer={(opt) => handleAnswer(q, opt)}
+            onAddToReview={() => onAddToReview(q.id)}
+          />
         );
       })}
 
-      {/* All done banner */}
-      {allDone && (
+      {/* Page navigation */}
+      <div className="flex items-center gap-3 pt-1">
+        {/* Previous page */}
+        <button
+          onClick={() => goToPage(currentPage - 1)}
+          disabled={currentPage === 0}
+          className="flex items-center gap-2 bg-white border-2 border-slate-200 text-slate-600 font-bold py-3 px-4 rounded-xl text-sm hover:border-sky-300 hover:text-sky-600 active:scale-[0.97] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+        >
+          <ChevronRight className="w-4 h-4" />
+          السابق
+        </button>
+
+        {/* Page dots — show up to 7 */}
+        <div className="flex-1 flex items-center justify-center gap-1.5">
+          {Array.from({ length: totalPages }, (_, i) => {
+            if (totalPages <= 7 || Math.abs(i - currentPage) <= 2 || i === 0 || i === totalPages - 1) {
+              return (
+                <button
+                  key={i}
+                  onClick={() => goToPage(i)}
+                  className={`rounded-full transition-all duration-200 ${i === currentPage ? 'w-6 h-3 bg-sky-500' : 'w-2.5 h-2.5 bg-slate-200 hover:bg-slate-300'}`}
+                />
+              );
+            }
+            if (Math.abs(i - currentPage) === 3) {
+              return <span key={i} className="text-slate-300 text-xs">…</span>;
+            }
+            return null;
+          })}
+        </div>
+
+        {/* Next page */}
+        {currentPage < totalPages - 1 ? (
+          <button
+            onClick={() => goToPage(currentPage + 1)}
+            className="flex items-center gap-2 bg-gradient-to-l from-sky-500 to-blue-600 text-white font-bold py-3 px-4 rounded-xl text-sm hover:shadow-md active:scale-[0.97] transition-all"
+          >
+            التالي
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+        ) : (
+          <button
+            onClick={onFinish}
+            className="flex items-center gap-2 bg-gradient-to-l from-emerald-500 to-teal-600 text-white font-bold py-3 px-4 rounded-xl text-sm hover:shadow-md active:scale-[0.97] transition-all"
+          >
+            النتائج
+            <Trophy className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+
+      {/* All answered banner */}
+      {allAnswered && (
         <motion.div
           key="finish"
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
           className="bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600 rounded-2xl p-7 text-center shadow-xl"

@@ -16,21 +16,19 @@ export default function HomeTab({ data, onStartQuiz }) {
   const correctIds = Object.entries(data?.answers || {}).filter(([, v]) => v.status === 'correct').map(([k]) => Number(k));
   const wrongIds = Object.entries(data?.answers || {}).filter(([, v]) => v.status === 'wrong').map(([k]) => Number(k));
 
+  const PAGE_SIZE = 20;
+
   // Range picker state
   const [showRangePicker, setShowRangePicker] = useState(false);
   const [rangeFrom, setRangeFrom] = useState(1);
-  const [rangeTo, setRangeTo] = useState(Math.min(20, questions.length));
-
-  // Question viewer pagination
-  const [visibleCount, setVisibleCount] = useState(20);
-  const [pageSize, setPageSize] = useState(20);
 
   const handleRangeStart = () => {
     const from = Math.max(1, Math.min(rangeFrom, questions.length));
-    const to = Math.max(from, Math.min(rangeTo, questions.length));
-    onStartQuiz('range', { from, to });
+    onStartQuiz('range', { from });
     setShowRangePicker(false);
   };
+
+  const availableFromHere = Math.min(PAGE_SIZE, Math.max(0, questions.length - rangeFrom + 1));
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -107,65 +105,44 @@ export default function HomeTab({ data, onStartQuiz }) {
           </button>
         </div>
 
-        {/* Range picker inline */}
+        {/* Range picker inline — single "from" input, auto 20 questions */}
         {showRangePicker && (
           <div className="mt-4 bg-white/15 rounded-xl p-4 border border-white/20 animate-fade-in">
-            <p className="text-white/90 text-xs font-bold mb-3">اختر نطاق الأسئلة</p>
-            <div className="grid grid-cols-2 gap-3 mb-3">
-              <div>
-                <label className="text-white/70 text-xs block mb-1">من سؤال</label>
+            <p className="text-white/90 text-xs font-bold mb-1">ابدأ من أي سؤال؟</p>
+            <p className="text-white/60 text-xs mb-3">سيتم عرض {PAGE_SIZE} سؤال تلقائياً</p>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="flex-1">
+                <label className="text-white/70 text-xs block mb-1">ابدأ من السؤال رقم</label>
                 <input
                   type="number"
                   min={1}
                   max={questions.length}
                   value={rangeFrom}
                   onChange={e => setRangeFrom(Number(e.target.value))}
-                  className="w-full bg-white/20 border border-white/30 rounded-lg px-3 py-2 text-white text-sm font-bold placeholder-white/50 focus:outline-none focus:border-white/60"
+                  className="w-full bg-white/20 border border-white/30 rounded-lg px-3 py-2 text-white text-sm font-bold placeholder-white/50 focus:outline-none focus:border-white/60 text-center"
                 />
               </div>
-              <div>
-                <label className="text-white/70 text-xs block mb-1">إلى سؤال</label>
-                <input
-                  type="number"
-                  min={rangeFrom}
-                  max={questions.length}
-                  value={rangeTo}
-                  onChange={e => setRangeTo(Number(e.target.value))}
-                  className="w-full bg-white/20 border border-white/30 rounded-lg px-3 py-2 text-white text-sm font-bold placeholder-white/50 focus:outline-none focus:border-white/60"
-                />
+              <div className="text-center pt-5">
+                <div className="bg-white/20 border border-white/30 rounded-lg px-3 py-2">
+                  <p className="text-white/60 text-xs leading-none">حتى</p>
+                  <p className="font-black text-white text-sm leading-none mt-0.5">
+                    {Math.min(rangeFrom + PAGE_SIZE - 1, questions.length)}
+                  </p>
+                </div>
               </div>
             </div>
             <button
               onClick={handleRangeStart}
-              className="w-full bg-white text-sky-600 font-black py-2.5 rounded-xl text-sm shadow hover:bg-sky-50 active:scale-[0.97]"
+              disabled={availableFromHere === 0}
+              className="w-full bg-white text-sky-600 font-black py-2.5 rounded-xl text-sm shadow hover:bg-sky-50 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              ابدأ ({Math.max(0, Math.min(rangeTo, questions.length) - Math.max(1, rangeFrom) + 1)} سؤال)
+              ابدأ ({availableFromHere} سؤال)
             </button>
           </div>
         )}
       </div>
  
-      {/* Today's stats */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-        <div className="flex items-center gap-2 mb-3">
-          <Calendar className="w-4 h-4 text-slate-500" />
-          <h3 className="font-bold text-slate-700 text-sm">إنجازات اليوم</h3>
-        </div>
-        <div className="grid grid-cols-3 gap-3">
-          <div className="text-center">
-            <div className="text-xl font-black text-sky-600">{daily.solved}</div>
-            <div className="text-xs text-slate-400">محلول</div>
-          </div>
-          <div className="text-center">
-            <div className="text-xl font-black text-emerald-600">{daily.correct}</div>
-            <div className="text-xs text-slate-400">صحيح</div>
-          </div>
-          <div className="text-center">
-            <div className="text-xl font-black text-rose-600">{daily.wrong}</div>
-            <div className="text-xs text-slate-400">خطأ</div>
-          </div>
-        </div>
-      </div>
+ 
     </div>
   );
 }

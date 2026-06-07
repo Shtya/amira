@@ -28,8 +28,8 @@ export function useQuiz() {
     let qs = [];
     if (mode === 'all') qs = [...questions];
     else if (mode === 'range') {
-      const { from, to } = config;
-      qs = questions.filter(q => q.id >= from && q.id <= to);
+      const { from } = config;
+      qs = questions.filter(q => q.id >= from);
     } else if (mode === 'random') {
       const count = config.count || 5;
       qs = [...questions].sort(() => Math.random() - 0.5).slice(0, count);
