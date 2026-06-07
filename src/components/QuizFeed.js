@@ -166,7 +166,7 @@ const FeedCard = memo(function FeedCard({
                 <p className={`font-bold text-sm mb-1 ${answered.isCorrect ? 'text-emerald-700' : 'text-rose-700'}`}>
                   {answered.isCorrect ? 'إجابة صحيحة! أحسنت!' : 'إجابة خاطئة'}
                 </p>
-                {question.explanation && <p className="text-slate-600 text-xs leading-relaxed">{question.explanation}</p>}
+                {question.explanation && <p dir="ltr" style={{fontFamily : "'Segoe UI', system-ui"}} className="text-slate-600 text-xs leading-relaxed">{question.explanation}</p>}
                 {!answered.isCorrect && (
                   <button
                     onClick={onAddToReview}

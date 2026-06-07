@@ -112,7 +112,7 @@ export default function QuizCard({
                 {isCorrect ? 'إجابة صحيحة! أحسنت!' : 'إجابة خاطئة'}
               </p>
               {question.explanation && (
-                <p className="text-slate-600 text-sm leading-relaxed">{question.explanation}</p>
+                <p dir="ltr" style={{fontFamily : "'Segoe UI', system-ui"}} className="text-slate-600 text-sm leading-relaxed">{question.explanation}</p>
               )}
             </div>
           </div>
