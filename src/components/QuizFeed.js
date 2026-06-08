@@ -90,7 +90,7 @@ function QuestionImage({ src, alt }) {
 
 // ── Feed card ──────────────────────────────────────────────────────────────────
 const FeedCard = memo(function FeedCard({
-  question, questionNumber, animDelay, answered, isInReview, onAnswer, onAddToReview,
+  question, questionNumber, animDelay, answered, prevAnswer, isInReview, onAnswer, onAddToReview,
 }) {
   const compact = question.options.every(opt => opt.length <= 35);
 
@@ -116,9 +116,35 @@ const FeedCard = memo(function FeedCard({
               {question.text}
             </p>
           </div>
-          <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${!answered ? 'bg-white/30' : answered.isCorrect ? 'bg-emerald-300' : 'bg-rose-300'}`} />
+          <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${
+            answered
+              ? (answered.isCorrect ? 'bg-emerald-300' : 'bg-rose-300')
+              : prevAnswer
+                ? (prevAnswer.status === 'correct' ? 'bg-emerald-200' : 'bg-rose-200')
+                : 'bg-white/30'
+          }`} />
         </div>
       </div>
+
+      {/* Previous-answer badge (non-weakness modes only) */}
+      {prevAnswer && !answered && (
+        <div className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b ${
+          prevAnswer.status === 'correct'
+            ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
+            : 'bg-rose-50 border-rose-100 text-rose-700'
+        }`}>
+          {prevAnswer.status === 'correct'
+            ? <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+            : <Lightbulb className="w-3.5 h-3.5 shrink-0" />
+          }
+          <span>
+            {prevAnswer.status === 'correct'
+              ? 'أجبت على هذا السؤال صحيحًا من قبل'
+              : `أجبت خطأً من قبل — اخترت: ${OPTION_LETTERS[prevAnswer.chosenOption ?? 0]}`
+            }
+          </span>
+        </div>
+      )}
 
       {/* Question image */}
       {question.image && (
@@ -129,23 +155,35 @@ const FeedCard = memo(function FeedCard({
 
       {/* Options */}
       <div className={`p-4 grid gap-2 ${compact ? 'grid-cols-2' : 'grid-cols-1'}`}>
-        {question.options.map((option, idx) => (
-          <button
-            key={idx}
-            onClick={() => !answered && onAnswer(idx)}
-            disabled={!!answered}
-            className={`group w-full flex items-center gap-2.5 rounded-xl border-2 transition-all duration-200 text-sm font-medium ${compact ? 'p-3' : 'p-3.5'} ${getOptionStyle(idx, answered, question.correct)}`}
-          >
-            <span className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 transition-all duration-200 ${getLetterStyle(idx, answered, question.correct)}`}>
-              {OPTION_LETTERS[idx]}
-            </span>
-            <span className="flex-1 leading-snug text-left" dir="ltr" style={{ fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif" }}>
-              {option}
-            </span>
-            {!compact && answered && idx === question.correct && <Check className="w-4 h-4 text-emerald-500 shrink-0" strokeWidth={3} />}
-            {!compact && answered && idx === answered.selected && !answered.isCorrect && idx !== question.correct && <X className="w-4 h-4 text-rose-400 shrink-0" strokeWidth={3} />}
-          </button>
-        ))}
+        {question.options.map((option, idx) => {
+          // Show a subtle "previous choice" dot when not yet answered in this session
+          const isPrevChoice = !answered && prevAnswer && idx === prevAnswer.chosenOption;
+          return (
+            <button
+              key={idx}
+              onClick={() => !answered && onAnswer(idx)}
+              disabled={!!answered}
+              className={`group w-full flex items-center gap-2.5 rounded-xl border-2 transition-all duration-200 text-sm font-medium ${compact ? 'p-3' : 'p-3.5'} ${getOptionStyle(idx, answered, question.correct)}`}
+            >
+              <span className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 transition-all duration-200 ${getLetterStyle(idx, answered, question.correct)}`}>
+                {OPTION_LETTERS[idx]}
+              </span>
+              <span className="flex-1 leading-snug text-left" dir="ltr" style={{ fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif" }}>
+                {option}
+              </span>
+              {/* Previous choice marker */}
+              {isPrevChoice && (
+                <span className={`text-[10px] font-black shrink-0 px-1.5 py-0.5 rounded-md ${
+                  prevAnswer.status === 'correct' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-500'
+                }`}>
+                  سابق
+                </span>
+              )}
+              {!compact && answered && idx === question.correct && <Check className="w-4 h-4 text-emerald-500 shrink-0" strokeWidth={3} />}
+              {!compact && answered && idx === answered.selected && !answered.isCorrect && idx !== question.correct && <X className="w-4 h-4 text-rose-400 shrink-0" strokeWidth={3} />}
+            </button>
+          );
+        })}
       </div>
 
       {/* Feedback */}
@@ -185,8 +223,17 @@ const FeedCard = memo(function FeedCard({
   );
 });
 
+// Weakness modes treat every question as a fresh start — no previous-answer hints
+const WEAKNESS_MODES = new Set(['weak', 'wrong', 'review']);
+
 // ── Main feed ──────────────────────────────────────────────────────────────────
-export default function QuizFeed({ quizQuestions, data, onAnswerById, onAddToReview, onFinish }) {
+export default function QuizFeed({ quizQuestions, data, examConfig, onAnswerById, onAddToReview, onFinish }) {
+  const isWeaknessMode = WEAKNESS_MODES.has(examConfig?.mode);
+
+  // Map of questionId → { status, chosenOption } from persistent storage
+  // Only surfaced in non-weakness modes
+  const storedAnswers = data?.answers || {};
+
   const [localAnswers, setLocalAnswers] = useState({});
   const [currentPage, setCurrentPage] = useState(0);
   const topRef = useRef(null);
@@ -249,6 +296,10 @@ export default function QuizFeed({ quizQuestions, data, onAnswerById, onAddToRev
       {/* Question cards for this page */}
       {pageQuestions.map((q, idx) => {
         const globalIdx = currentPage * PAGE_SIZE + idx;
+        const stored = storedAnswers[q.id];
+        const prevAnswer = (!isWeaknessMode && stored && stored.status !== 'unanswered')
+          ? { status: stored.status, chosenOption: stored.chosenOption }
+          : null;
         return (
           <FeedCard
             key={q.id}
@@ -256,6 +307,7 @@ export default function QuizFeed({ quizQuestions, data, onAnswerById, onAddToRev
             questionNumber={globalIdx + 1}
             animDelay={Math.min(idx * 0.03, 0.3)}
             answered={localAnswers[q.id] || null}
+            prevAnswer={prevAnswer}
             isInReview={data?.reviewList?.includes(q.id)}
             onAnswer={(opt) => handleAnswer(q, opt)}
             onAddToReview={() => onAddToReview(q.id)}

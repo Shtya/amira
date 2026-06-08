@@ -90,6 +90,7 @@ export default function Home() {
               key={examConfig?.startedAt}
               quizQuestions={quizQuestions}
               data={data}
+              examConfig={examConfig}
               onAnswerById={answerById}
               onAddToReview={addToReview}
               onFinish={() => setActiveMode('results')}

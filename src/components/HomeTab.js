@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Flame, FileText, Check, X, Target, Zap, Calendar, Shuffle, ChevronLeft, List } from 'lucide-react';
 import { getAccuracy, getLevel, getDailyStats } from '../utils/storage';
 import { questions } from '../data/questions';
+import QuestionGrid from './QuestionGrid';
 
 const PAGE_SIZES = [20, 50, 100];
 
@@ -32,18 +33,7 @@ export default function HomeTab({ data, onStartQuiz }) {
 
   return (
     <div className="space-y-4 animate-fade-in">
-      {/* Streak banner */}
-      {streak > 0 && (
-        <div className="bg-gradient-to-r from-amber-400 to-orange-500 rounded-2xl p-4 text-white shadow-md animate-slide-up">
-          <div className="flex items-center gap-3">
-            <Flame className="w-8 h-8 text-white shrink-0" />
-            <div>
-              <p className="font-bold text-sm">سلسلة رائعة!</p>
-              <p className="text-white/80 text-xs">{streak} يوم دراسة متتالي. استمر!</p>
-            </div>
-          </div>
-        </div>
-      )}
+ 
 
       {/* Quick stats */}
       <div className="grid grid-cols-4 gap-2">
@@ -60,6 +50,9 @@ export default function HomeTab({ data, onStartQuiz }) {
           </div>
         ))}
       </div>
+
+      {/* Question progress grid */}
+      <QuestionGrid data={data} onStartQuiz={onStartQuiz} />
 
       {/* Start quiz CTA */}
       <div className="bg-gradient-to-br from-sky-500 via-blue-500 to-indigo-600 rounded-2xl p-6 text-white shadow-xl">

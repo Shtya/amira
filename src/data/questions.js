@@ -1131,7 +1131,7 @@ export const questions = [
     id: 142, 
     text: 'A student radiographer under 18 years of age must not receive an annual occupational dose greater than:',
     options: ['0.1 Rem (1 mSv)', '0.5 Rem (5 mSv)', '5 Rem (50 mSv)', '10 Rem (100 mSv)'],
-    correct: 1,
+    correct: 0,
     explanation: 'The NCRP recommends that persons under 18 years should not exceed 0.5 Rem (5 mSv) per year occupational dose.',
     category: 'Radiation Protection',
   },
